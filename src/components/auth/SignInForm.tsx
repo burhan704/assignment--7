@@ -81,7 +81,6 @@ export default function SignInForm({
 
       toast.success("সফলভাবে সাইন ইন হয়েছে।");
       router.push(callbackURL);
-      router.refresh();
     } catch (error) {
       console.error("Email sign-in exception:", error);
 

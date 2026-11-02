@@ -3,9 +3,14 @@ import Link from "next/link";
 import { CategoryNavigation } from "@/components/CategoryNavigation";
 import { DateLabel } from "@/components/DateLabel";
 import { NavbarAccount } from "@/components/NavbarAccount";
-import type { Category } from "@/lib/utils";
+import { getCategories } from "@/lib/utils";
 
-export default function Navbar({ categories }: { categories: Category[] }) {
+async function CategoryNavigationContent() {
+  const categories = await getCategories();
+  return <CategoryNavigation categories={categories} />;
+}
+
+export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
@@ -29,10 +34,9 @@ export default function Navbar({ categories }: { categories: Category[] }) {
             <div aria-hidden="true" className="mx-auto h-10 max-w-6xl px-5 py-2" />
           }
         >
-          <CategoryNavigation categories={categories} />
+          <CategoryNavigationContent />
         </Suspense>
       </nav>
     </header>
   );
 }
-
