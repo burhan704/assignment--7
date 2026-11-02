@@ -1,9 +1,11 @@
-import { mongodbAdapter } from "@better-auth/mongo-adapter";
+﻿import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { headers } from "next/headers";
-
-const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+const baseURL =
+  process.env.BETTER_AUTH_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  "http://localhost:3000";
 const databaseURI = process.env.MONGODB_URI;
 const databaseName = process.env.MONGODB_DATABASE;
 const secret = process.env.BETTER_AUTH_SECRET;
@@ -94,35 +96,35 @@ export const auth = betterAuth({
   socialProviders: {
     ...(googleClientId && googleClientSecret
       ? {
-          google: {
-            clientId: googleClientId,
-            clientSecret: googleClientSecret,
-          },
-        }
+        google: {
+          clientId: googleClientId,
+          clientSecret: googleClientSecret,
+        },
+      }
       : {}),
     ...(githubClientId && githubClientSecret
       ? {
-          github: {
-            clientId: githubClientId,
-            clientSecret: githubClientSecret,
-          },
-        }
+        github: {
+          clientId: githubClientId,
+          clientSecret: githubClientSecret,
+        },
+      }
       : {}),
     ...(facebookClientId && facebookClientSecret
       ? {
-          facebook: {
-            clientId: facebookClientId,
-            clientSecret: facebookClientSecret,
-          },
-        }
+        facebook: {
+          clientId: facebookClientId,
+          clientSecret: facebookClientSecret,
+        },
+      }
       : {}),
     ...(discordClientId && discordClientSecret
       ? {
-          discord: {
-            clientId: discordClientId,
-            clientSecret: discordClientSecret,
-          },
-        }
+        discord: {
+          clientId: discordClientId,
+          clientSecret: discordClientSecret,
+        },
+      }
       : {}),
   },
 });
@@ -130,3 +132,5 @@ export const auth = betterAuth({
 export async function getCurrentSession() {
   return auth.api.getSession({ headers: await headers() });
 }
+  
+
