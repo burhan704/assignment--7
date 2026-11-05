@@ -1,52 +1,161 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# বাজার দর | Bazar Dor
 
-## Getting Started
+## 📝 Project Description
 
-First, run the development server:
+Bazar Dor is a Bengali-language web application for browsing daily prices of common market products in Bangladesh. It displays price changes and category-based product listings, with market-level price ranges and account features for signed-in users.
+
+The product and category catalog is fetched from the BazaarDor API and revalidated every 60 seconds. Authentication data is stored in MongoDB.
+
+## 🧰 Technologies Used
+
+- **Next.js 16** — App Router and server-rendered pages
+- **React 19** and **TypeScript**
+- **Tailwind CSS 4** and **DaisyUI 5** — styling and UI components
+- **MongoDB** with the MongoDB Node.js driver
+- **Better Auth** with its MongoDB adapter — email/password and optional social sign-in
+- **Sonner** — user notifications
+- **ESLint 9** — linting
+
+## ✨ Key Features
+
+- Bengali interface with localized dates, prices, and numerals.
+- Home page sections for products with rising and falling prices, plus the full product catalog.
+- Horizontally scrolling ticker showing catalog prices and price changes.
+- Category navigation and category-specific product listings.
+- Product detail pages with today, yesterday, and last-week prices and market-level minimum/maximum prices.
+- Email/password sign-up and sign-in.
+- Optional Google, GitHub, Facebook, and Discord sign-in when each provider is configured.
+- Protected product details and profile pages with sign-in redirects.
+- Profile display, name updates, and sign-out.
+
+## 🗂️ Project Structure
+
+```text
+.
+├── public/                 # Static assets, including the home-page hero image
+├── src/
+│   ├── app/                # App Router pages, layouts, loading states, and auth route
+│   │   ├── api/auth/       # Better Auth API handler
+│   │   ├── category/       # Category product listings
+│   │   ├── product/        # Product details
+│   │   ├── profile/        # Signed-in profile pages
+│   │   ├── signin/         # Sign-in page
+│   │   └── signup/         # Sign-up page
+│   ├── components/         # Shared UI and authentication components
+│   ├── lib/                # Auth setup, API access, formatting, and helpers
+│   └── proxy.ts            # Session-cookie route protection
+├── .env.example            # Environment variable names and placeholders
+├── next.config.ts          # Next.js configuration
+└── package.json            # Dependencies and npm scripts
+```
+
+## 🚀 Installation Instructions
+
+### Prerequisites
+
+- Node.js compatible with the project's Next.js version
+- npm
+- A MongoDB instance (local or MongoDB Atlas) for authentication
+
+### Setup
+
+1. Clone the repository and enter the project directory:
+
+   ```bash
+   git clone https://github.com/nafizfuad-web/Assignment--7.git
+   cd Assignment--7
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Create a local environment file:
+
+   ```powershell
+   Copy-Item .env.example .env.local
+   ```
+
+   On macOS or Linux, use `cp .env.example .env.local`.
+
+4. Configure the required environment variables described below. Social sign-in is optional.
+
+5. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+6. Open [http://localhost:3000](http://localhost:3000).
+
+### Available npm scripts
+
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start the Next.js development server |
+| `npm run build` | Create a production build |
+| `npm run start` | Start the production server (after building) |
+| `npm run lint` | Run ESLint |
+
+## 🔐 Environment Variables Setup
+
+Set these values in `.env.local` for local development and in your hosting provider's environment settings for deployment. Never commit `.env.local` or real credentials.
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `MONGODB_URI` | Yes | MongoDB connection URI used by Better Auth |
+| `MONGODB_DATABASE` | No | Authentication database name; defaults to `bazar-dor` |
+| `BETTER_AUTH_SECRET` | Yes | Better Auth secret; use a random value of at least 32 characters |
+| `BETTER_AUTH_URL` | Recommended | Canonical application URL used by the auth server |
+| `NEXT_PUBLIC_APP_URL` | Recommended | Application origin used by the auth client and trusted-origin configuration |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No | Google OAuth credentials; both are needed to enable Google sign-in |
+| `GITHUB_ID` / `GITHUB_SECRET` | No | GitHub OAuth credentials; both are needed to enable GitHub sign-in |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | No | Legacy GitHub credential names; used when the corresponding `GITHUB_ID` / `GITHUB_SECRET` is not set |
+| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | No | Optional Facebook OAuth credentials |
+| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | No | Optional Discord OAuth credentials |
+
+Create a secure Better Auth secret with Node.js:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+For OAuth, configure each provider's application with the matching site origin and callback URL. The callback pattern is `https://YOUR-DOMAIN/api/auth/callback/{provider}`; for local development, replace the origin with `http://localhost:3000`. Google and GitHub setup details are available in [SOCIAL_LOGIN_SETUP.md](./SOCIAL_LOGIN_SETUP.md).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔌 API Information and Endpoints
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The application has one local API route, handled by Better Auth:
 
-## Learn More
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET`, `POST` | `/api/auth/[...all]` | Better Auth handler for authentication requests, sessions, and configured provider callbacks |
+| `GET` | `/api/auth/callback/{provider}` | OAuth callback handled through the auth route, for a configured provider |
 
-To learn more about Next.js, take a look at the following resources:
+The product catalog is provided by an external API; these are fetched server-side and cached/revalidated for 60 seconds:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `https://api.api-store.workers.dev/api/bazardor/products` | Product prices and market data |
+| `GET` | `https://api.api-store.workers.dev/api/bazardor/categories` | Product categories |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+There are no separately implemented product or category API routes in this repository. The main application pages are `/`, `/category/{slug}`, `/product/{slug}`, `/signin`, `/signup`, `/profile`, and `/profile/update`. Product details and profile pages require a signed-in user.
 
-## Deploy on Vercel
+## ☁️ Deployment Information
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This is a standard Next.js application and can be deployed to Vercel or another host that supports Next.js. For a production deployment:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Connect the repository to the hosting provider and use the project's npm build script (`npm run build`).
+2. Set the required environment variables in the provider's secure environment settings. Use the production origin for `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL`.
+3. Allow the deployed application to connect to the configured MongoDB instance.
+4. Add the production OAuth callback URL(s) to each provider that you enable.
+5. Deploy and verify the home page, authentication flow, catalog API access, and protected pages.
 
-## বাজারদর সেটআপ
+For a self-managed Node.js deployment, build with `npm run build`, then run `npm run start`.
 
-প্রথমে local environment config তৈরি করুন:
+## 👩‍💻 Developer Information
 
-```powershell
-Copy-Item .env.example .env.local
-```
-
-`.env.local`-এ `BETTER_AUTH_SECRET`-এর জন্য অন্তত ৩২ অক্ষরের একটি random secret থাকবে (বা `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` দিয়ে তৈরি করা)। MongoDB চালু রাখুন; `MONGODB_URI`-তে connection URI এবং `MONGODB_DATABASE`-এ database name হিসেবে `bazar-dor` দিন। Google বা GitHub sign-in চালু করতে `.env.example`-এ থাকা সংশ্লিষ্ট provider-এর client ID ও secret পূরণ করুন।
-
-```bash
-npm run dev
-```
-
-MongoDB-তে auth collection Better Auth নিজে তৈরি করে; আলাদা schema migration নেই। Catalog-এর পণ্য ও বিভাগ BazaarDor API থেকে আসে। Category page public; product details এবং profile page sign-in ছাড়া খোলা যাবে না। Route protection `src/proxy.ts` এবং protected server page-এ করা হয়।
+- **Project:** Bazar Dor (বাজার দর)
+- **Repository maintainer:** [nafizfuad-web](https://github.com/nafizfuad-web)
+- **Source repository:** [nafizfuad-web/Assignment--7](https://github.com/nafizfuad-web/Assignment--7)
