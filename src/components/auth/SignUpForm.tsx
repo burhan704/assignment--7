@@ -1,0 +1,184 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+import { toast } from "sonner";
+import { Field, SocialButtons, SubmitButton } from "@/components/auth/AuthParts";
+import { signUp, useSession } from "@/lib/auth-client";
+import {
+  getEmailAuthErrorMessage,
+  getEmailAuthNetworkErrorMessage,
+} from "@/lib/email-auth-errors";
+import type { SocialProvider } from "@/lib/social-providers";
+
+type SignUpFormProps = {
+  callbackURL: string;
+  socialError?: string;
+  socialProviders: SocialProvider[];
+};
+
+type FormErrors = {
+  name?: string;
+  email?: string;
+  password?: string;
+  form?: string;
+};
+
+export default function SignUpForm({
+  callbackURL,
+  socialError,
+  socialProviders,
+}: SignUpFormProps) {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  useEffect(() => {
+    if (session) router.replace(callbackURL);
+  }, [callbackURL, router, session]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "")
+      .trim()
+      .toLowerCase();
+    const password = String(formData.get("password") ?? "");
+
+    const nextErrors: FormErrors = {};
+    if (!name) {
+      nextErrors.name = "আপনার পূর্ণ নাম লিখুন।";
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      nextErrors.email = "সঠিক ইমেইল দিন।";
+    }
+    if (password.length < 8) {
+      nextErrors.password = "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error("ফর্মের তথ্য সঠিক নয়, আবার দেখুন।");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await signUp.email({
+        name,
+        email,
+        password,
+        callbackURL,
+      });
+
+      if (error) {
+        console.warn("Sign-up request failed:", {
+          status: error.status,
+          code: error.code,
+        });
+        const message = getEmailAuthErrorMessage({
+          code: error.code,
+          status: error.status,
+        });
+        setErrors({ form: message });
+        toast.error(message);
+        return;
+      }
+
+      toast.success("অ্যাকাউন্ট তৈরি হয়েছে। এবার সাইন ইন করুন।");
+      router.push(`/signin?callbackURL=${encodeURIComponent(callbackURL)}`);
+    } catch (error) {
+      console.error("Email sign-up exception:", error);
+      const message = getEmailAuthNetworkErrorMessage();
+      setErrors({ form: message });
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (isPending) {
+    return (
+      <div className="w-full">
+        <div className="h-10 animate-pulse rounded-lg bg-[#e3ebe5]" />
+        <div className="mt-4 h-10 animate-pulse rounded-lg bg-[#e3ebe5]" />
+        <div className="mt-4 h-10 animate-pulse rounded-lg bg-[#cfe3d5]" />
+        <SocialButtons
+          callbackURL={callbackURL}
+          errorMessage={socialError}
+          providers={socialProviders}
+        />
+      </div>
+    );
+  }
+
+  if (session) {
+    return (
+      <div className="w-full">
+        <div className="h-10 animate-pulse rounded-lg bg-[#e3ebe5]" />
+        <div className="mt-4 h-10 animate-pulse rounded-lg bg-[#e3ebe5]" />
+        <div className="mt-4 h-10 animate-pulse rounded-lg bg-[#cfe3d5]" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <form noValidate onSubmit={handleSubmit}>
+        {errors.form && (
+          <p
+            className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+            role="alert"
+          >
+            {errors.form}
+          </p>
+        )}
+        <Field
+          autoComplete="name"
+          error={errors.name}
+          id="name"
+          label="নাম"
+          name="name"
+          placeholder="আপনার নাম"
+          type="text"
+        />
+        <Field
+          autoComplete="email"
+          error={errors.email}
+          id="email"
+          label="ইমেইল"
+          name="email"
+          placeholder="you@example.com"
+          type="email"
+        />
+        <Field
+          autoComplete="new-password"
+          error={errors.password}
+          id="password"
+          label="পাসওয়ার্ড"
+          name="password"
+          placeholder="কমপক্ষে ৮ অক্ষর"
+          type="password"
+        />
+        <SubmitButton loading={loading}>অ্যাকাউন্ট তৈরি করুন</SubmitButton>
+      </form>
+      <SocialButtons
+        callbackURL={callbackURL}
+        errorMessage={socialError}
+        providers={socialProviders}
+      />
+      <p className="mt-4 text-center text-sm">
+        আগে থেকেই অ্যাকাউন্ট আছে?{" "}
+        <Link
+          className="text-[#08873f] hover:underline"
+          href={`/signin?callbackURL=${encodeURIComponent(callbackURL)}`}
+        >
+          সাইন ইন করুন
+        </Link>
+      </p>
+    </>
+  );
+}

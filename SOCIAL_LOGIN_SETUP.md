@@ -41,7 +41,7 @@ GOOGLE_CLIENT_SECRET=Google_Client_Secret
 GITHUB_ID=GitHub_Client_ID
 GITHUB_SECRET=GitHub_Client_Secret
 MONGODB_URI=mongodb://127.0.0.1:27017
-MONGODB_DATABASE=test
+MONGODB_DATABASE=bazar-dor
 ```
 
 `MONGODB_DATABASE`-এ অ্যাপের সঠিক MongoDB database name দিন। এই Atlas সেটআপে এটি `test`; অন্য database ব্যবহার করলে সেই নাম দিন। `sample_mflix` একটি sample database, তাই অ্যাপের database হিসেবে সেটি নির্বাচন না করলে ব্যবহার করবেন না।
